@@ -1209,6 +1209,8 @@ def arg_parser():
     parser.add_argument('--nonet', dest="fetch", action="store_false",
                         help="Don't go online to download images or data")
     parser.add_argument('tests', nargs='*')
+    parser.add_argument('-p', '--prettylog', dest='prettylog', action='store_true',
+                        help='Print pretty output and log stdout')
 
     parser.set_defaults(verbosity=1, fetch=True)
     return parser
@@ -1265,6 +1267,20 @@ def test_main(options=None, suite=None, attachments=None, **kwargs):
         suite = unittest.TestLoader().loadTestsFromNames(opts.tests, module=__main__)
     elif not suite:
         suite = unittest.TestLoader().loadTestsFromModule(__main__)
+
+    if opts.prettylog:
+        testfilepath = __main__.__file__
+        testpathlist = testfilepath.split("/")
+        testname = testpathlist[len(testpathlist)-1]
+        myargs = sys.argv[1:]
+        newargs = []
+        for thisarg in myargs:
+            if thisarg[0] == "-" and thisarg.count('-') == 1:
+                thisarg = thisarg.replace("p", "")
+            if thisarg != "-" and thisarg != "--prettylog":
+                newargs.append(thisarg)
+        subprocess.call('{0}/verify/prettylogger.sh {1} {2}'.format(TEST_DIR, testname, " ".join(newargs)), shell=True)
+        return
 
     runner = TapRunner(verbosity=opts.verbosity, jobs=opts.jobs, thorough=opts.thorough)
     ret = runner.run(suite)
